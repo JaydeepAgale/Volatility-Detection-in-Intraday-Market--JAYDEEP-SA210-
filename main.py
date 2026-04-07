@@ -13,7 +13,7 @@ app.add_middleware(
     allow_headers = ["*"],
 )
 
-df, daily_df = load_and_process_data() 
+df, daily_df, hypothesis_result = load_and_process_data() 
 
 @app.get("/") 
 def home(): 
@@ -25,19 +25,7 @@ def test():
 
 @app.get("/volatility") 
 def get_volatility(limit: int = 100): 
-<<<<<<< HEAD
-    data = df[["open", "high", "low", "close", "rolling_vol_15", "vol_spike", "range"]].reset_index().tail(limit)
-    return data.to_dict(orient="records")
-
-@app.get("/daily-summary")
-def daily_summary(limit: int = 20):
-    try:
-        data = daily_df.reset_index().tail(limit)
-        return data.to_dict(orient="records")
-    except Exception as e:
-        return {"error": str(e)}
-=======
-    data = df[["open","high","low","close", "rolling_vol_15", "vol_spike"]].reset_index().tail(limit)
+    data = df[["open","high","low","close", "rolling_vol_15", "vol_spike","range"]].reset_index().tail(limit)
     return data.to_dict(orient="records")
 
 @app.get("/daily-summary")
@@ -47,7 +35,6 @@ def daily_summary(limit: int = 50):
         return data.to_dict(orient="records")
     except Exception as e :
         return{"error":str(e)}
->>>>>>> 238ff32b85253a91caabb9c4024076f1d6276d68
 
 @app.get("/high-vol-days")
 def high_vol_days(limit: int = 20):
@@ -64,3 +51,24 @@ def intraday_by_date(date: str):
         return data.to_dict(orient = "records")
     except Exception as e:
         return {"error" : str(e)}
+    
+@app.get("/hypothesis-test")
+def get_hypothesis():
+    return hypothesis_result
+
+@app.get("/range-distribution")
+def range_distribution():
+    df_temp = df.copy()
+    df_temp["date"] = df_temp.index.date
+    daily_temp = daily_df.copy()
+    daily_temp["date"] = daily_temp.index.date
+
+    merged = df_temp.merge(daily_temp[["date", "regime"]], on="date")
+
+    high_vol = merged[merged["regime"] == "High Vol"]["range"]
+    normal_vol = merged[merged["regime"] == "Normal"]["range"]
+
+    return {
+        "high_vol": high_vol.tolist(),
+        "normal_vol": normal_vol.tolist()
+    }

@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from scipy.stats import ttest_ind
 
 def load_and_process_data():
     df = pd.read_csv("Nifty50dataset.csv")
@@ -17,11 +18,8 @@ def load_and_process_data():
     percentile_threshold = df["rolling_vol_15"].quantile(0.95)
     df["vol_spike"] = df["rolling_vol_15"] > percentile_threshold
 
-<<<<<<< HEAD
     df["range"] = df["high"] - df["low"]
-
-=======
->>>>>>> 238ff32b85253a91caabb9c4024076f1d6276d68
+    
     df.dropna(inplace=True)
 
     # DAILY SUMMARY
@@ -47,4 +45,21 @@ def load_and_process_data():
 
     daily["regime"] = daily["spike_count"].apply(classify)
 
-    return df, daily
+    df["date"] = df.index.date
+    daily["date"] = daily.index.date
+
+    merged = df.merge(daily[["date", "regime"]], on = "date")
+
+    high_vol = merged[merged["regime"] == "High Vol"]["range"]
+    normal_vol = merged[merged["regime"] == "Normal"]["range"]
+
+    t_stat, p_value = ttest_ind(high_vol, normal_vol, equal_var=False)
+
+    hypothesis_result = {
+        "t_stat" : float(t_stat),
+        "p_value" : float(p_value),
+        "high_vol_mean_range" : float(high_vol.mean()),
+        "normal_vol_mean_range" : float(normal_vol.mean()),
+    }
+
+    return df, daily, hypothesis_result
