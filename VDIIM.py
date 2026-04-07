@@ -45,6 +45,7 @@ def load_and_process_data():
 
     daily["regime"] = daily["spike_count"].apply(classify)
 
+# Adding Hypothesis Test
     df["date"] = df.index.date
     daily["date"] = daily.index.date
 
