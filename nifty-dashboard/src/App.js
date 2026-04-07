@@ -527,10 +527,15 @@ function App() {
           borderRadius : "10px"
         }}>
           {(() => {
-            // const high = getStats(rangeData.high_vol);
-            // const normal = getStats(rangeData.normal_vol);
+            const high = getStats(rangeData.high_vol);
+            const normal = getStats(rangeData.normal_vol);
 
             return (
+              <>
+              <div style = {{marginBottom : "15px", color : "#1e293b"}}>
+                <p>High Vol Median: {high.median.toFixed(2)}</p>
+                <p>Normal Median: {normal.median.toFixed(2)}</p>
+              </div>
               <ResponsiveContainer width = "100%" height = {300}>
                 <BarChart
                 data = {[
@@ -553,6 +558,7 @@ function App() {
                   </Bar>
                   </BarChart>
               </ResponsiveContainer>
+              </>
             );
           })()}
         </div>
