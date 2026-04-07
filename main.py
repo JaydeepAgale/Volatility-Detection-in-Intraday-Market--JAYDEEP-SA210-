@@ -25,7 +25,7 @@ def test():
 
 @app.get("/volatility") 
 def get_volatility(limit: int = 100): 
-    data = df[["open","high","low","close", "rolling_vol_15", "vol_spike","range"]].reset_index().tail(limit)
+    data = df[["open", "high", "low", "close", "rolling_vol_15", "vol_spike", "range"]].reset_index().tail(limit)
     return data.to_dict(orient="records")
 
 @app.get("/daily-summary")
@@ -33,8 +33,8 @@ def daily_summary(limit: int = 50):
     try:
         data = daily_df.reset_index().tail(limit)
         return data.to_dict(orient="records")
-    except Exception as e :
-        return{"error":str(e)}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/high-vol-days")
 def high_vol_days(limit: int = 20):
@@ -45,9 +45,7 @@ def high_vol_days(limit: int = 20):
 def intraday_by_date(date: str):
     try:
         filtered = df[df.index.date == pd.to_datetime(date).date()]
-
         data = filtered[["open", "high", "low", "close", "rolling_vol_15", "vol_spike", "range"]].reset_index()
-
         return data.to_dict(orient = "records")
     except Exception as e:
         return {"error" : str(e)}
