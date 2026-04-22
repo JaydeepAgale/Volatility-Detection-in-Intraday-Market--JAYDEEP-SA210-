@@ -33,6 +33,7 @@ function App() {
   const [selectedDate, setSelectedDate] = useState("");
   const [hypothesis, setHypothesis] = useState(null);
   const [rangeData, setRangeData] = useState(null);
+  const [prediction, setPrediction] = useState(null);
 
   const getStats = (arr) => {
     const sorted = [...arr].sort((a, b) => a - b);
@@ -81,8 +82,8 @@ function App() {
           color : "#e2e8f0"
         }}>
           <p>Index: {label}</p>
-          <p style = {{color : "#f59e0b"}}>Volatility : {vol?.value?.toFixed(4)}</p>
-          <p style = {{color : "#22c55e"}}>Range : {range?.value?.toFixed(4)}</p>
+          <p style = {{color : "#f59e0b"}}>Volatility : {vol?.value !== undefined ? vol.value.toFixed(4) : "NA"}</p>
+          <p style = {{color : "#22c55e"}}>Range : {range?.value !== undefined ? range.value.toFixed(4) : "NA"}</p>
         </div>
       );
     }
@@ -189,6 +190,8 @@ function App() {
           rolling_vol_15: Number(d.rolling_vol_15) * 1000, // scale
           range: Number(d.range),
           vol_spike: d.vol_spike,
+          ema_8: Number(d.ema_8),
+          ema_30: Number(d.ema_30),
         }));
 
         setIntradayData(formatted);
@@ -212,6 +215,8 @@ function App() {
         rolling_vol_15: Number(d.rolling_vol_15) * 1000,
         range: Number(d.range),
         vol_spike: d.vol_spike,
+        ema_8: Number(d.ema_8),
+        ema_30: Number(d.ema_30),
       }));
 
       setIntradayData(formatted);
@@ -230,6 +235,13 @@ function App() {
     fetch("http://127.0.0.1:8000/range-distribution")
     .then(res => res.json())
     .then(data => setRangeData(data))
+    .catch(err => console.error(err));
+  }, []);
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/predict-next-open")
+    .then(res => res.json())
+    .then(data => setPrediction(data))
     .catch(err => console.error(err));
   }, []);
 
@@ -450,6 +462,21 @@ function App() {
         boxShadow : "0 2px 8px rgba(0, 0, 0, 0.1)",
         marginBottom : "20px"
       }}>
+        <h2 style = {{color : "#1e293b"}}>Select Date for Intraday View</h2>
+
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          style = {{
+            padding : "10px",
+            borderRadius : "6px",
+            border : "none",
+            background : "#576375",
+            color : "white",
+            marginBottom : "20px"
+          }}
+        />
 
         <div style={{ width: "100%", height: 400 }}>
           <ResponsiveContainer>
@@ -464,6 +491,10 @@ function App() {
                 shape={<Candlestick />}
                 barSize = {5}
               />
+
+              <Line type="monotone" dataKey="ema_8" stroke="#facc15" dot={false}/>
+              <Line type="monotone" dataKey="ema_30" stroke="#8b5cf6" dot={false} />
+
               <Brush dataKey="index" height={30} />
             </ComposedChart>
           </ResponsiveContainer>
@@ -561,6 +592,18 @@ function App() {
               </>
             );
           })()}
+        </div>
+      )}
+
+      {prediction && (
+        <div style = {cardStyle}>
+          <h3>Next Candle Prediction</h3>
+          <p>
+            Predicted Open: {prediction?.predicted_next_open !== undefined ? prediction.predicted_next_open.toFixed(2) : "Loading..."}
+          </p>
+          <p>
+            MAE: {prediction?.avg_mae !== undefined ? prediction.avg_mae.toFixed(4) : "Loading..."}
+          </p>
         </div>
       )}
     </div>

@@ -13,7 +13,7 @@ app.add_middleware(
     allow_headers = ["*"],
 )
 
-df, daily_df, hypothesis_result = load_and_process_data() 
+df, daily_df, hypothesis_result, regression_result = load_and_process_data() 
 
 @app.get("/") 
 def home(): 
@@ -25,7 +25,8 @@ def test():
 
 @app.get("/volatility") 
 def get_volatility(limit: int = 100): 
-    data = df[["open", "high", "low", "close", "rolling_vol_15", "vol_spike", "range"]].reset_index().tail(limit)
+    data = df[["open", "high", "low", "close", "rolling_vol_15", 
+               "vol_spike", "range", "ema_8", "ema_30"]].reset_index().tail(limit)
     return data.to_dict(orient="records")
 
 @app.get("/daily-summary")
@@ -45,7 +46,8 @@ def high_vol_days(limit: int = 20):
 def intraday_by_date(date: str):
     try:
         filtered = df[df.index.date == pd.to_datetime(date).date()]
-        data = filtered[["open", "high", "low", "close", "rolling_vol_15", "vol_spike", "range"]].reset_index()
+        data = filtered[["open", "high", "low", "close", "rolling_vol_15", 
+                         "vol_spike", "range", "ema_8", "ema_30"]].reset_index()
         return data.to_dict(orient = "records")
     except Exception as e:
         return {"error" : str(e)}
@@ -70,3 +72,7 @@ def range_distribution():
         "high_vol": high_vol.tolist(),
         "normal_vol": normal_vol.tolist()
     }
+
+@app.get("/predict-next-open")
+def predict_next_open():
+    return regression_result
